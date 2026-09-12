@@ -1,0 +1,13 @@
+# Database configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/database
+spring.datasource.username=username
+spring.datasource.password=password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# HikariCP (optional tuning)
+spring.datasource.hikari.pool-name=HikariPool
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.idle-timeout=30000
+spring.datasource.hikari.connection-timeout=20000
+spring.datasource.hikari.max-lifetime=1800000
