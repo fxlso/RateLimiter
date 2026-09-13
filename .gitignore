@@ -6,6 +6,7 @@ target/
 
 # security related
 src/main/resources/system.properties
+src/main/resources/application.properties
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
