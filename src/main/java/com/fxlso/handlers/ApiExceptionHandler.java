@@ -1,7 +1,9 @@
 package com.fxlso.handlers;
 
+import com.fxlso.exceptions.InvalidCredentialsException;
 import com.fxlso.exceptions.MissingInformationException;
 import com.fxlso.exceptions.UserAlreadyExistsException;
+import com.fxlso.exceptions.UserNotFoundException;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,9 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class ApiExceptionHandler {
-    public record RegisterRequest(@NotBlank String username, String password) {}
+    public record RegisterNewUserRequest(@NotBlank String username, @NotBlank String password) {}
+    public record DeleteUserRequest(@NotBlank String username) {}
+    public record LoginRequest(@NotBlank String username, @NotBlank String password) {}
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidJson(HttpMessageNotReadableException ex) {
@@ -50,7 +54,7 @@ public class ApiExceptionHandler {
         );
     }
 
-    @ExceptionHandler(com.fxlso.exceptions.MissingInformationException.class)
+    @ExceptionHandler(MissingInformationException.class)
     public ResponseEntity<Map<String, Object>> handleMissingInformation(MissingInformationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 Map.of(
@@ -60,4 +64,23 @@ public class ApiExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                Map.of(
+                        "error", "Unauthorized",
+                        "message", ex.getMessage()
+                )
+        );
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        "error", "User not found",
+                        "message", ex.getMessage()
+                )
+        );
+    }
 }
