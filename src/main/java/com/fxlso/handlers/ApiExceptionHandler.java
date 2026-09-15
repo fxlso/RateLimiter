@@ -4,7 +4,6 @@ import com.fxlso.exceptions.InvalidCredentialsException;
 import com.fxlso.exceptions.MissingInformationException;
 import com.fxlso.exceptions.UserAlreadyExistsException;
 import com.fxlso.exceptions.UserNotFoundException;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -20,9 +19,6 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class ApiExceptionHandler {
-    public record RegisterNewUserRequest(@NotBlank String username, @NotBlank String password) {}
-    public record DeleteUserRequest(@NotBlank String username) {}
-    public record LoginRequest(@NotBlank String username, @NotBlank String password) {}
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidJson(HttpMessageNotReadableException ex) {

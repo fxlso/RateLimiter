@@ -2,6 +2,9 @@ package com.fxlso.routes;
 
 import com.fxlso.handlers.ApiExceptionHandler;
 import com.fxlso.objects.User;
+import com.fxlso.requests.DeleteUserRequest;
+import com.fxlso.requests.LoginRequest;
+import com.fxlso.requests.RegisterNewUserRequest;
 import com.fxlso.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -20,7 +23,7 @@ public class UserRoute {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody ApiExceptionHandler.RegisterNewUserRequest request) {
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterNewUserRequest request) {
         userService.registerNewUser(request.username(), request.password());
         return ResponseEntity.ok(
                 Map.of(
@@ -31,7 +34,7 @@ public class UserRoute {
     }
 
     @DeleteMapping(value = "/delete", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> delete(@Valid @RequestBody ApiExceptionHandler.DeleteUserRequest request) {
+    public ResponseEntity<Map<String, Object>> delete(@Valid @RequestBody DeleteUserRequest request) {
         userService.deleteUser(request.username());
         return ResponseEntity.ok(
                 Map.of(
@@ -42,7 +45,7 @@ public class UserRoute {
     }
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody ApiExceptionHandler.LoginRequest request) {
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
         Map<String, Object> loginResponse = userService.login(request.username(), request.password());
         return ResponseEntity.ok(
                 loginResponse

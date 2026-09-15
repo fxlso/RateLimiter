@@ -1,5 +1,6 @@
 package com.fxlso.repositories;
 
+import com.fxlso.objects.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,5 +35,9 @@ public class UserRepository {
 
     public String getPasswordHash(String username) {
         return jdbcTemplate.queryForObject("SELECT password FROM users WHERE username = ?", String.class, username.toLowerCase());
+    }
+
+    public User getUser(String username) {
+        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE username = ?", User.class, username.toLowerCase());
     }
 }
