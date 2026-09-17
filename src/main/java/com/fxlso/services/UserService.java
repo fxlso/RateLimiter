@@ -4,19 +4,18 @@ import com.fxlso.exceptions.InvalidCredentialsException;
 import com.fxlso.exceptions.MissingInformationException;
 import com.fxlso.exceptions.UserAlreadyExistsException;
 import com.fxlso.exceptions.UserNotFoundException;
+import com.fxlso.objects.User;
 import com.fxlso.repositories.UserRepository;
 import com.fxlso.util.PasswordUtil;
-import com.zaxxer.hikari.HikariDataSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
 import java.util.Map;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
@@ -84,4 +83,12 @@ public class UserService {
         userRepository.deleteUser(username);
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.getUser(username.toLowerCase());
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        return user;
+    }
 }

@@ -1,9 +1,6 @@
 package com.fxlso.handlers;
 
-import com.fxlso.exceptions.InvalidCredentialsException;
-import com.fxlso.exceptions.MissingInformationException;
-import com.fxlso.exceptions.UserAlreadyExistsException;
-import com.fxlso.exceptions.UserNotFoundException;
+import com.fxlso.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -76,6 +73,38 @@ public class ApiExceptionHandler {
                 Map.of(
                         "error", "User not found",
                         "message", ex.getMessage()
+                )
+        );
+    }
+
+    @ExceptionHandler(UnauthenticatedDeletionRequest.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidDeletionRequest(UnauthenticatedDeletionRequest ex) {
+        System.out.println("Unauthenticated deletion request: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                Map.of(
+                        "error", "You cannot perform this action"
+                )
+        );
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, Object>> handleUsernameNotFoundException(org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        "error", "User not found",
+                        "message", ex.getMessage()
+                )
+        );
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex) {
+        System.out.println("Unhandled exception: " + ex.getMessage());
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        "error", "Internal server error",
+                        "message", "An unexpected error occurred"
                 )
         );
     }
