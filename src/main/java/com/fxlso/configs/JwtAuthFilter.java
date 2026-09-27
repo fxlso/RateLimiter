@@ -1,6 +1,7 @@
 package com.fxlso.configs;
 
 import com.fxlso.repositories.UserRepository;
+import com.fxlso.repositories.SessionsRepository;
 import com.fxlso.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,17 +20,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import io.jsonwebtoken.JwtException;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+    private final SessionsRepository sessionsRepository;
 
     @Autowired
-    public JwtAuthFilter(UserDetailsService userDetailsService, JwtService jwtService) {
+    public JwtAuthFilter(UserDetailsService userDetailsService, JwtService jwtService, SessionsRepository sessionsRepository) {
         this.userDetailsService = userDetailsService;
         this.jwtService = jwtService;
+        this.sessionsRepository = sessionsRepository;
     }
 
     @Override
@@ -40,14 +44,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtService.extractUsername(token);
+            try {
+                username = jwtService.extractUsername(token);
+            } catch (JwtException | IllegalArgumentException e) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                return;
+            }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (jwtService.validateToken(token, userDetails)) {
+                if (jwtService.validateToken(token, userDetails)
+                        && sessionsRepository.isActiveSession(jwtService.extractSessionId(token))) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,

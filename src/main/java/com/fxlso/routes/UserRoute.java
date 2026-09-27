@@ -5,6 +5,8 @@ import com.fxlso.repositories.UserRepository;
 import com.fxlso.requests.LoginRequest;
 import com.fxlso.requests.RegisterNewUserRequest;
 import com.fxlso.services.JwtService;
+import com.fxlso.services.TokenService;
+import com.fxlso.requests.RefreshTokenRequest;
 import com.fxlso.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -24,12 +26,14 @@ public class UserRoute {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final TokenService tokenService;
 
-    public UserRoute(UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, UserRepository userRepository) {
+    public UserRoute(UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.tokenService = tokenService;
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -65,7 +69,7 @@ public class UserRoute {
             return ResponseEntity.ok(
                 Map.of(
                     "message", "Login successful",
-                    "token", jwtService.generateToken(request.username())
+                    "tokens", tokenService.issue(request.username())
                 )
             );
         } else {
@@ -73,27 +77,27 @@ public class UserRoute {
         }
     }
 
-    @DeleteMapping(value = "/logout", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> logout() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        // TODO: make refresh token system + db verification to ensure that logouts expire tokens and long sign-ins work better
-        if (auth == null) {
-            return ResponseEntity.status(401).body(
-                    Map.of(
-                            "error", "Unauthorized",
-                            "message", "No user is currently authenticated"
-                    )
-            );
-        }
-
-        auth.setAuthenticated(false);
-        SecurityContextHolder.clearContext();
-
+    @GetMapping(value ="/profile")
+    public ResponseEntity<Map<String, Object>> profile() {
+        String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        var user = userRepository.getUser(authenticatedUsername);
         return ResponseEntity.ok(
                 Map.of(
-                        "message", "Logout successful"
+                        "username", user.username(),
+                        "id", user.id()
                 )
         );
+    }
+
+    @PostMapping(value = "/refresh", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(Map.of("tokens", tokenService.refresh(request.refreshToken())));
+    }
+
+    @DeleteMapping(value = "/logout", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> logout(@Valid @RequestBody RefreshTokenRequest request) {
+        tokenService.revoke(request.refreshToken());
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok(Map.of("message", "Logout successful"));
     }
 }

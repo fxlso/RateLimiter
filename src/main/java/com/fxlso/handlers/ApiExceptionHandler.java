@@ -1,9 +1,12 @@
 package com.fxlso.handlers;
 
 import com.fxlso.exceptions.*;
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -98,6 +101,26 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler
+    public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                Map.of(
+                        "error", "Unauthorized",
+                        "message", "Username or password is incorrect"
+                )
+        );
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidToken(JwtException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                Map.of(
+                        "error", "Unauthorized",
+                        "message", "Invalid or expired refresh token"
+                )
+        );
+    }
+
+    @ExceptionHandler
     public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex) {
         System.out.println("Unhandled exception: " + ex.getMessage());
         ex.printStackTrace();
@@ -105,6 +128,16 @@ public class ApiExceptionHandler {
                 Map.of(
                         "error", "Internal server error",
                         "message", "An unexpected error occurred"
+                )
+        );
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, Object>> handleUnsupportedHttpRequest(HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(
+                Map.of(
+                        "error", "Method not allowed",
+                        "message", "The requested method is not allowed for this endpoint"
                 )
         );
     }
