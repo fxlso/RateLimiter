@@ -98,7 +98,7 @@ public class SessionsRepository {
     public void revokeAllExcept(long userId, UUID currentJti) {
         System.out.println("Revoking all sessions for user " + userId + " except session " + currentJti);
 
-        jdbcTemplate.update("UPDATE sessions SET revoked_at = NOW() WHERE user_id = ? AND id != ? AND revoked_at IS NULL",
-                userId, currentJti);
+        jdbcTemplate.update("UPDATE sessions SET revoked_at = NOW(), replaced_by_jti = ? WHERE user_id = ? AND id != ? AND revoked_at IS NULL",
+                currentJti, userId, currentJti);
     }
 }
