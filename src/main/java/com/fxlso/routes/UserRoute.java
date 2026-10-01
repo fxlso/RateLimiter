@@ -23,14 +23,12 @@ import java.util.Map;
 public class UserRoute {
 
     private final UserService userService;
-    private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final TokenService tokenService;
 
-    public UserRoute(UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService) {
+    public UserRoute(UserService userService, AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService) {
         this.userService = userService;
-        this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.tokenService = tokenService;
