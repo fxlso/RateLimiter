@@ -18,7 +18,7 @@ import java.util.Map;
  * thrown during request processing and returns appropriate HTTP responses with error messages.
  */
 @RestControllerAdvice
-public class ApiExceptionHandler {
+public class UserRouteApiExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidJson(HttpMessageNotReadableException ex) {

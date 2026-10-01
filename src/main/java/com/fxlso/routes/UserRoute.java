@@ -1,6 +1,7 @@
 package com.fxlso.routes;
 
 import com.fxlso.exceptions.InvalidCredentialsException;
+import com.fxlso.objects.User;
 import com.fxlso.repositories.UserRepository;
 import com.fxlso.requests.LoginRequest;
 import com.fxlso.requests.RegisterNewUserRequest;
@@ -24,13 +25,11 @@ public class UserRoute {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
     private final TokenService tokenService;
 
-    public UserRoute(UserService userService, AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService) {
+    public UserRoute(UserService userService, AuthenticationManager authenticationManager, TokenService tokenService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
         this.tokenService = tokenService;
     }
 
@@ -78,7 +77,7 @@ public class UserRoute {
     @GetMapping(value ="/profile")
     public ResponseEntity<Map<String, Object>> profile() {
         String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        var user = userRepository.getUser(authenticatedUsername);
+        User user = (User) userService.loadUserByUsername(authenticatedUsername);
         return ResponseEntity.ok(
                 Map.of(
                         "username", user.username(),
