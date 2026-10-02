@@ -12,6 +12,8 @@ import java.util.UUID;
 public class KeyRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    public static final int DEFAULT_REQUEST_LIMIT = 1000; // Default number of requests allowed per time period
+    public static final int DEFAULT_RESET_INTERVAL_MS = 60 * 1000; // Default time interval in milliseconds after which the request count is reset (1 minute)
 
     public KeyRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -25,9 +27,9 @@ public class KeyRepository {
      * @param user The user for whom the key is being generated
      * @param requestLimit The number of requests allowed per time period
      * @param resetIntervalMs The time interval in milliseconds after which the request count is reset
-     * @return The generated key as a String
+     * @return A Map containing the generated key and its details
      */
-    public String generateKey(User user, int requestLimit, int resetIntervalMs) {
+    public Map<String, Object> generateKey(User user, int requestLimit, int resetIntervalMs) {
 
         String newKey = UUID.randomUUID().toString();
         String keyHash = PasswordUtil.hashPassword(newKey);
@@ -40,7 +42,7 @@ public class KeyRepository {
         jdbcTemplate.update("INSERT INTO api_keys (user_id, key_hash, created_at, request_limit, limit_reset_ms) VALUES (?, ?, NOW(), ?, ?)",
                                  Long.valueOf(user.id()), keyHash, requestLimit, resetIntervalMs);
 
-        return newKey;
+        return Map.of("apiKey", newKey, "message", "API key generated successfully", "requestLimit", requestLimit, "limitResetMs", resetIntervalMs);
     }
 
     /**
@@ -49,10 +51,10 @@ public class KeyRepository {
      *
      * See {@link #generateKey(User, int, int)} for more details.
      * @param user
-     * @return newly genreated API Key
+     * @return A Map containing the generated key and its details
      */
-    public String generateKey(User user) {
-        return generateKey(user, 1000, 60 * 60 * 1000); // Default: 1000 requests per minute
+    public Map<String, Object> generateKey(User user) {
+        return generateKey(user, DEFAULT_REQUEST_LIMIT, DEFAULT_RESET_INTERVAL_MS);
     }
 
     /**
@@ -116,11 +118,10 @@ public class KeyRepository {
      */
     public Map<String, Object> getApiKeyDetailsByUser(User user) {
         return jdbcTemplate.queryForObject(
-                "SELECT k.user_id, k.request_limit, k.limit_reset_ms FROM api_keys k WHERE k.user_id = ? AND k.enabled = true",
+                "SELECT k.request_limit, k.limit_reset_ms FROM api_keys k WHERE k.user_id = ? AND k.enabled = true",
                 (rs, rowNum) -> Map.of(
-                        "user_id", rs.getString("user_id"),
-                        "request_limit", rs.getInt("request_limit"),
-                        "limit_reset_ms", rs.getInt("limit_reset_ms")
+                        "requestLimit", rs.getInt("request_limit"),
+                        "limitResetMs", rs.getInt("limit_reset_ms")
                 ),
                 Long.valueOf(user.id())
         );

@@ -34,4 +34,12 @@ public class ApiKeyExceptionHandler {
                 "message", ex.getMessage()
         ));
     }
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, Object>> handleApiGenerationException(ApiGenerationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "API Key Generation Error",
+                "message", ex.getMessage()
+        ));
+    }
 }

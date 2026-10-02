@@ -1,5 +1,6 @@
 package com.fxlso.services;
 
+import com.fxlso.exceptions.ApiGenerationException;
 import com.fxlso.exceptions.InvalidApiKeyException;
 import com.fxlso.exceptions.NoActiveKeysException;
 import com.fxlso.objects.User;
@@ -27,19 +28,54 @@ public class KeyService {
         return valid;
     }
 
-    public String generateKey(User user, int maxRequests, int limitResetTimeMs) {
+    public Map<String, Object> generateKey(User user, Integer maxRequests, Integer limitResetTimeMs) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        if (maxRequests == null) {
+            maxRequests = KeyRepository.DEFAULT_REQUEST_LIMIT;
+        }
+
+        if (limitResetTimeMs == null) {
+            limitResetTimeMs = KeyRepository.DEFAULT_RESET_INTERVAL_MS;
+        }
+
+        if (maxRequests <= 0 || limitResetTimeMs <= 0) {
+            throw new ApiGenerationException("maxRequests and limitResetTimeMs must be non-negative.");
+        }
+
+        if (limitResetTimeMs < KeyRepository.DEFAULT_RESET_INTERVAL_MS) {
+            throw new ApiGenerationException(String.format("limitResetTimeMs must be at least %d milliseconds.", KeyRepository.DEFAULT_RESET_INTERVAL_MS));
+        }
+
         return keyRepository.generateKey(user, maxRequests, limitResetTimeMs);
     }
 
-    public String generateKey(User user) {
+    public Map<String, Object> generateKey(User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         return keyRepository.generateKey(user);
     }
 
     public void revokeKeys(User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         keyRepository.revokeKeys(user);
     }
 
     public User getUserByApiKey(String apiKey) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            throw new IllegalArgumentException("API key cannot be null or empty");
+        }
+
         return keyRepository.getUserByKey(apiKey);
     }
 

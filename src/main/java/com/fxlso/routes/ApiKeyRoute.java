@@ -1,6 +1,7 @@
 package com.fxlso.routes;
 
 import com.fxlso.objects.User;
+import com.fxlso.requests.ApiKeyGenRequest;
 import com.fxlso.services.KeyService;
 import com.fxlso.services.UserService;
 import org.apache.coyote.Response;
@@ -24,21 +25,18 @@ public class ApiKeyRoute {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<Map<String, Object>> generateApiKey() {
+    public ResponseEntity<Map<String, Object>> generateApiKey(@RequestBody(required = false) ApiKeyGenRequest apiKeyGenRequest) {
         String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = (User) userService.loadUserByUsername(authenticatedUsername);
-        String apiKey = keyService.generateKey(user);
 
-        // TODO Accept request parameters for max_requests and limit_reset_time_ms, and pass them to the generateKey method.
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                Map.of(
-                        "apiKey", apiKey,
-                        "message", "API key generated successfully",
-                        "request_limit", 1000,
-                        "limit_reset_time_ms", 60 * 60 * 1000
-                )
-        );
+        Map<String, Object> res;
+        if (apiKeyGenRequest == null) {
+            res = keyService.generateKey(user);
+        } else {
+            res = keyService.generateKey(user, apiKeyGenRequest.requestLimit(), apiKeyGenRequest.limitResetMs());
+        }
 
+        return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
     @GetMapping("/details")
